@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSPRNG Live</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>CSPRNG Live RNG</h1>
+  <div id="status">
+    <p><b>Minute Start:</b> <span id="minute"></span></p>
+    <p><b>Final Digit:</b> <span id="final"></span></p>
+    <p><b>Samples Taken:</b> <span id="samples"></span></p>
+  </div>
+  <h2>Frequency (0–9)</h2>
+  <table id="freq">
+    <tr>
+      <th>Digit</th><th>Count</th>
+    </tr>
+    <tbody id="freq-body"></tbody>
+  </table>
+
+  <script>
+    const ws = new WebSocket(`wss://${location.host}`);
+    ws.onmessage = (msg) => {
+      const data = JSON.parse(msg.data);
+      document.getElementById("minute").textContent = data.minuteStart;
+      document.getElementById("samples").textContent = data.samplesTaken;
+
+      if (data.type === "final") {
+        document.getElementById("final").textContent = data.finalDigit;
+      } else {
+        document.getElementById("final").textContent = "(preview)";
+      }
+
+      const body = document.getElementById("freq-body");
+      body.innerHTML = "";
+      Object.keys(data.counts).forEach(k => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${k}</td><td>${data.counts[k]}</td>`;
+        body.appendChild(tr);
+      });
+    };
+  </script>
+</body>
+</html>
